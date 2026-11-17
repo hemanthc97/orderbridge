@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OrderBridge: order integration control room</title>
+  <meta name="description" content="A working reference implementation of an ERP order-integration hub. Four partner formats in, one ERP out, nothing lost and nothing posted twice.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2313213a'/%3E%3Cpath d='M5 16h22' stroke='%23fff' stroke-width='4' stroke-linecap='round'/%3E%3Ccircle cx='11' cy='16' r='4' fill='%2313213a' stroke='%23fff' stroke-width='2.5'/%3E%3Ccircle cx='22' cy='16' r='4' fill='%230e7c7b' stroke='%23fff' stroke-width='2.5'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Spline+Sans+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="web/styles.css">
+</head>
+<body>
+  <header class="masthead">
+    <div class="brand">
+      <h1>OrderBridge</h1>
+      <p>Four partner formats in, one ERP out. Nothing lost, nothing posted twice.</p>
+    </div>
+    <div class="clock" aria-live="off">
+      <span class="clock-label">Simulated time</span>
+      <span id="clock" class="clock-value">08:00:00</span>
+    </div>
+  </header>
+
+  <section class="scenario" aria-label="Scenario">
+    <div class="scenario-pick">
+      <label for="scenario">Scenario</label>
+      <select id="scenario"></select>
+    </div>
+    <div class="scenario-brief">
+      <p id="premise"></p>
+      <p id="watch"></p>
+      <p id="try" class="try"></p>
+    </div>
+    <div class="transport">
+      <button id="run" class="btn primary" type="button">Run scenario</button>
+      <button id="skip" class="btn" type="button">Skip to end</button>
+      <button id="reset" class="btn" type="button">Reset</button>
+      <div class="speed" role="group" aria-label="Simulation speed">
+        <button type="button" data-speed="10">10x</button>
+        <button type="button" data-speed="30" aria-pressed="true">30x</button>
+        <button type="button" data-speed="120">120x</button>
+      </div>
+      <label class="seed">Seed <input id="seed" type="number" min="1" max="9999" value="1"></label>
+    </div>
+  </section>
+
+  <section class="line" aria-label="Live pipeline">
+    <svg id="map" viewBox="0 0 1240 300" role="img" aria-label="Orders move from four trading partners through seven processing stages to the ERP. Side tracks hold duplicates, rejected payloads, parked changes, exceptions, retries and dead letters."></svg>
+    <p id="announce" class="announce" aria-live="polite"></p>
+  </section>
+
+  <section class="readout" aria-label="Results">
+    <dl id="kpis" class="kpis"></dl>
+    <div class="integrity" id="integrity"></div>
+  </section>
+
+  <div class="work">
+    <aside class="rail" aria-label="Faults and safeguards">
+      <h2>Break the ERP</h2>
+      <label class="switch"><input type="checkbox" id="offline"><span>Take the ERP offline</span></label>
+      <label class="slider"><span>503 responses <output id="o-transient">0%</output></span><input type="range" id="transient" min="0" max="50" value="0"></label>
+      <label class="slider"><span>Responses lost after commit <output id="o-lost">0%</output></span><input type="range" id="lost" min="0" max="50" value="0"></label>
+      <label class="slider"><span>Accepted, never posted <output id="o-silent">0%</output></span><input type="range" id="silent" min="0" max="50" value="0"></label>
+
+      <h2>Safeguards</h2>
+      <label class="switch"><input type="checkbox" id="sg-dedupe" checked><span>Inbound duplicate detection</span></label>
+      <label class="switch"><input type="checkbox" id="sg-idem" checked><span>Idempotency keys on ERP calls</span></label>
+      <label class="switch"><input type="checkbox" id="sg-breaker" checked><span>Circuit breaker</span></label>
+      <p class="hint">Switch one off, run a scenario again, and watch the integrity counters.</p>
+
+      <h2>Send your own</h2>
+      <label class="field">Partner
+        <select id="send-partner"></select>
+      </label>
+      <label class="field">Order
+        <select id="send-kind">
+          <option value="">Clean order</option>
+          <option value="unknownItem">Item with no cross-reference</option>
+          <option value="price">Off-contract price</option>
+          <option value="earlyShip">Ship date inside lead time</option>
+          <option value="inactive">Discontinued item</option>
+          <option value="syntax">Broken payload</option>
+        </select>
+      </label>
+      <button id="send" class="btn" type="button">Send order</button>
+      <button id="resend" class="btn" type="button">Resend last transmission</button>
+    </aside>
+
+    <main class="board">
+      <nav class="tabs" role="tablist" aria-label="Views">
+        <button role="tab" data-tab="ledger" aria-selected="true">Message ledger</button>
+        <button role="tab" data-tab="queues">Work queues <span id="q-badge" class="badge" hidden>0</span></button>
+        <button role="tab" data-tab="recon">Reconciliation</button>
+        <button role="tab" data-tab="mappings">Partner mappings</button>
+        <button role="tab" data-tab="design">Design notes</button>
+      </nav>
+      <div id="view" class="view" role="tabpanel"></div>
+    </main>
+  </div>
+
+  <footer class="foot">
+    <p>Everything here is simulated in your browser: synthetic partners, a mock ERP and a virtual clock. The integration engine is the same code the test suite exercises. <a href="https://github.com/hemanthc97/orderbridge">Source and design notes on GitHub</a>.</p>
+  </footer>
+
+  <script type="module" src="web/app.js"></script>
+</body>
+</html>

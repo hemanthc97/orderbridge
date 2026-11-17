@@ -1,0 +1,13 @@
+{
+  "name": "orderbridge",
+  "version": "1.0.0",
+  "description": "Reference implementation of an ERP order-integration hub: four partner formats in, one ERP out, nothing lost and nothing posted twice.",
+  "type": "module",
+  "license": "MIT",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "test": "node --test",
+    "scenarios": "node cli/run.js all",
+    "start": "node cli/serve.js"
+  }
+}
